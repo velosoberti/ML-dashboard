@@ -30,12 +30,16 @@ if [[ "$1" == "stop" ]]; then
         kill "$(cat "$PROJECT_ROOT/.pid_api")" 2>/dev/null && ok "Flask API stopped" || warn "Flask API was not running"
         rm -f "$PROJECT_ROOT/.pid_api"
     fi
+    # Also kill anything on port 8000
+    lsof -ti :8000 2>/dev/null | xargs -r kill 2>/dev/null || true
 
     # Dashboard
     if [[ -f "$PROJECT_ROOT/.pid_dashboard" ]]; then
         kill "$(cat "$PROJECT_ROOT/.pid_dashboard")" 2>/dev/null && ok "Dashboard stopped" || warn "Dashboard was not running"
         rm -f "$PROJECT_ROOT/.pid_dashboard"
     fi
+    # Also kill anything on port 8085
+    lsof -ti :8085 2>/dev/null | xargs -r kill 2>/dev/null || true
 
     # ZenML
     uv run zenml down 2>/dev/null && ok "ZenML stopped" || warn "ZenML was not running"
@@ -98,14 +102,25 @@ if ! uv run zenml status 2>/dev/null | grep -q "running"; then
 fi
 ok "ZenML at http://localhost:8237"
 
+# ── Helper: kill process on a port if occupied ──
+kill_port() {
+    local port=$1
+    local pid
+    pid=$(lsof -ti :"$port" 2>/dev/null || true)
+    if [[ -n "$pid" ]]; then
+        kill "$pid" 2>/dev/null || true
+        sleep 1
+    fi
+}
+
 # ── 6. Flask Prediction API ──
 log "Starting Flask API (port 8000)..."
-# Kill previous instance if still running
 if [[ -f "$PROJECT_ROOT/.pid_api" ]]; then
     kill "$(cat "$PROJECT_ROOT/.pid_api")" 2>/dev/null || true
     rm -f "$PROJECT_ROOT/.pid_api"
 fi
-nohup uv run python "$PROJECT_ROOT/api/run.py" > "$PROJECT_ROOT/.log_api.log" 2>&1 &
+kill_port 8000
+nohup uv run python -m api.run > "$PROJECT_ROOT/.log_api.log" 2>&1 &
 echo $! > "$PROJECT_ROOT/.pid_api"
 ok "Flask API starting at http://localhost:8000"
 
@@ -115,6 +130,7 @@ if [[ -f "$PROJECT_ROOT/.pid_dashboard" ]]; then
     kill "$(cat "$PROJECT_ROOT/.pid_dashboard")" 2>/dev/null || true
     rm -f "$PROJECT_ROOT/.pid_dashboard"
 fi
+kill_port 8085
 nohup uv run python "$PROJECT_ROOT/dashboard/server/server.py" --port 8085 > "$PROJECT_ROOT/.log_dashboard.log" 2>&1 &
 echo $! > "$PROJECT_ROOT/.pid_dashboard"
 ok "Dashboard starting at http://localhost:8085"

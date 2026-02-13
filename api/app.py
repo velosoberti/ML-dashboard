@@ -15,11 +15,15 @@ def create_app(api_config: APIConfig | None = None) -> Flask:
 
     app = Flask(__name__)
 
-    # Load model on startup
+    # Try to load model on startup (non-fatal if MLflow not ready or no model yet)
     with app.app_context():
-        config = load_prediction_config()
-        loader = ModelLoader()
-        loader.load(config)
+        try:
+            config = load_prediction_config()
+            loader = ModelLoader()
+            loader.load(config)
+        except Exception as e:
+            print(f"[WARN] Could not load model on startup: {e}")
+            print("[WARN] API running without model. Train and register a model, then restart or use /model/switch.")
 
     # Register blueprints
     from api.routes.health import health_bp
