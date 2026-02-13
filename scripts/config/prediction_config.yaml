@@ -1,0 +1,4 @@
+mlflow:
+  tracking_uri: http://localhost:5000
+  experiment_name: diabetes_prediction
+  model_name: decision_tree

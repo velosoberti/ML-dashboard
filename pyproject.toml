@@ -1,0 +1,33 @@
+[project]
+name = "projects"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "boto3>=1.42.41",
+    "datetime>=6.0",
+    "feast>=0.59.0",
+    "mlflow>=3.9.0",
+    "pandas>=2.3.3",
+    "pathlib>=1.0.1",
+    "plotly>=6.5.2",
+    "psycopg2-binary>=2.9.11",
+    "pyathena>=3.26.0",
+    "sqlalchemy>=2.0.46",
+    "streamlit>=1.53.1",
+    "zenml[server]==0.93.2",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.2.0",
+    "pytest>=9.0.2",
+    "ruff>=0.15.1",
+]
+
+[tool.ruff]
+exclude = ["scripts/__init__.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,25 @@
+mlflow:
+  tracking_uri: http://localhost:5000
+  experiment_name: diabetes_prediction
+data:
+  feature_repo_path: /home/luisveloso/a5x/projects/feature_repo/feature_repo
+  random_state: 42
+  source_data_path: /home/luisveloso/a5x/projects/data/processed/patient_features.parquet
+  target_column: Outcome
+  test_size: 0.2
+models:
+  decision_tree:
+    enabled: true
+    params:
+      max_depth: 5
+      min_samples_split: 10
+      min_samples_leaf: 4
+      criterion: gini
+      random_state: 42
+  knn:
+    enabled: true
+    params:
+      n_neighbors: 7
+      weights: distance
+      metric: minkowski
+      p: 2

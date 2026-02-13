@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes ML Platform</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css?v=40">
+</head>
+<body>
+    <div id="app">
+        <nav id="navigation" class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    <span>ML Platform</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+            </div>
+            <ul class="nav-list" id="nav-list"></ul>
+        </nav>
+
+        <main id="main-content" class="main-content">
+            <header class="top-bar">
+                <h2 id="panel-title">Home</h2>
+                <button class="theme-switch" id="theme-toggle" aria-label="Toggle theme">
+                    <svg id="theme-icon-sun" class="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg id="theme-icon-moon" class="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                </button>
+            </header>
+
+            <div id="panel-container" class="panel-container">
+                <section id="panel-home" class="panel" data-panel="home"><div class="panel-content"></div></section>
+                <section id="panel-predict" class="panel hidden" data-panel="predict"><div class="panel-content"></div></section>
+                <section id="panel-onlinestore" class="panel hidden" data-panel="onlinestore"><div class="panel-content"></div></section>
+                <section id="panel-dataset" class="panel hidden" data-panel="dataset"><div class="panel-content"></div></section>
+                <section id="panel-pipelines" class="panel hidden" data-panel="pipelines"><div class="panel-content"></div></section>
+                <section id="panel-featurestore" class="panel hidden" data-panel="featurestore"><div class="panel-content"></div></section>
+                <section id="panel-analytics" class="panel hidden" data-panel="analytics"><div class="panel-content"></div></section>
+            </div>
+
+            <footer class="page-footer" id="page-footer"></footer>
+        </main>
+    </div>
+
+    <script src="js/utils/dataLoader.js"></script>
+    <script src="js/components/ServiceCard.js"></script>
+    <script src="js/components/DataTable.js"></script>
+    <script src="js/panels/home.js"></script>
+    <script src="js/panels/predict.js"></script>
+    <script src="js/panels/onlinestore.js"></script>
+    <script src="js/panels/dataset.js"></script>
+    <script src="js/panels/pipelines.js"></script>
+    <script src="js/panels/featurestore.js"></script>
+    <script src="js/panels/analytics.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
