@@ -11,6 +11,18 @@ class DatasetPanel {
         this.isLoading = false;
         this.columns = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness',
                         'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome'];
+        // Must match PatientRecordSchema in prepare_data.py
+        this.fieldConstraints = {
+            Pregnancies:              { min: 0,   max: 20,  step: 1 },
+            Glucose:                  { min: 0,   max: 250, step: 1 },
+            BloodPressure:            { min: 0,   max: 200, step: 1 },
+            SkinThickness:            { min: 0,   max: 120, step: 1 },
+            Insulin:                  { min: 0,   max: 900, step: 1 },
+            BMI:                      { min: 0,   max: 80,  step: 0.01 },
+            DiabetesPedigreeFunction: { min: 0,   max: 3,   step: 0.01 },
+            Age:                      { min: 18,  max: 100, step: 1 },
+            Outcome:                  { min: 0,   max: 1,   step: 1 },
+        };
     }
 
     init() {
@@ -33,16 +45,45 @@ class DatasetPanel {
                 <h3 class="card-title">Add New Patient Record</h3>
             </div>
             <div class="card-body">
-                <form id="add-row-form" class="prediction-form">
+                <div class="field-reference" style="margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">Field Constraints Reference</div>
+                    <div class="table-container">
+                        <table class="data-table" style="font-size: 0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Min</th>
+                                    <th>Max</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${this.columns.map(col => {
+                                    const c = this.fieldConstraints[col];
+                                    const type = c.step < 1 ? 'decimal' : 'integer';
+                                    return `<tr>
+                                        <td style="font-weight:500;">${col}</td>
+                                        <td>${c.min}</td>
+                                        <td>${c.max}</td>
+                                        <td>${type}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <form id="add-row-form" class="prediction-form" novalidate>
                     <div class="form-grid">
-                        ${this.columns.map(col => `
+                        ${this.columns.map(col => {
+                            const c = this.fieldConstraints[col];
+                            return `
                             <div class="form-group">
-                                <label for="add-${col}">${col}</label>
+                                <label for="add-${col}">${col} <span style="color:var(--text-muted);font-size:0.75rem;">(${c.min}–${c.max})</span></label>
                                 <input type="number" id="add-${col}" name="${col}" class="input"
-                                    step="${col === 'BMI' || col === 'DiabetesPedigreeFunction' ? '0.01' : '1'}"
+                                    min="${c.min}" max="${c.max}" step="${c.step}"
                                     placeholder="${col}" required />
-                            </div>
-                        `).join('')}
+                            </div>`;
+                        }).join('')}
                     </div>
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary" id="add-row-btn">Add Row</button>
@@ -80,11 +121,32 @@ class DatasetPanel {
     async handleAddRow(e) {
         e.preventDefault();
         const form = e.target;
+        const resultDiv = document.getElementById('add-row-result');
         const data = {};
-        this.columns.forEach(col => { data[col] = parseFloat(new FormData(form).get(col)); });
+        const errors = [];
+
+        // Client-side validation
+        this.columns.forEach(col => {
+            const raw = new FormData(form).get(col);
+            if (raw === null || raw === '') {
+                errors.push(`${col} is required`);
+                return;
+            }
+            const val = parseFloat(raw);
+            data[col] = val;
+            const c = this.fieldConstraints[col];
+            if (val < c.min || val > c.max) {
+                errors.push(`${col} must be between ${c.min} and ${c.max} (got ${val})`);
+            }
+        });
+
+        if (errors.length > 0) {
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `<div class="error-message"><strong>Validation failed</strong><ul style="margin:6px 0 0 16px;text-align:left;">${errors.map(e => `<li>${e}</li>`).join('')}</ul></div>`;
+            return;
+        }
 
         const btn = document.getElementById('add-row-btn');
-        const resultDiv = document.getElementById('add-row-result');
         btn.disabled = true;
         btn.innerHTML = '<span class="loading-spinner small"></span> Adding...';
 
@@ -101,7 +163,11 @@ class DatasetPanel {
                 form.reset();
                 this.loadDataset();
             } else {
-                resultDiv.innerHTML = `<div class="error-message"><span>${result.message}</span></div>`;
+                let msg = result.message || 'Unknown error';
+                if (result.details && Array.isArray(result.details)) {
+                    msg = `<strong>${msg}</strong><ul style="margin:6px 0 0 16px;text-align:left;">${result.details.map(d => `<li>${d}</li>`).join('')}</ul>`;
+                }
+                resultDiv.innerHTML = `<div class="error-message">${msg}</div>`;
             }
         } catch (err) {
             resultDiv.classList.remove('hidden');

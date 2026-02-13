@@ -49,6 +49,19 @@ class PredictPanel {
         `;
         this.container.appendChild(modelCard);
 
+        // Model comparison card
+        const comparisonCard = document.createElement('div');
+        comparisonCard.className = 'card';
+        comparisonCard.innerHTML = `
+            <div class="card-header">
+                <h3 class="card-title">Model Comparison</h3>
+            </div>
+            <div class="card-body" id="predict-model-comparison">
+                <div class="loading"><div class="loading-spinner small"></div><span>Loading metrics...</span></div>
+            </div>
+        `;
+        this.container.appendChild(comparisonCard);
+
         const formCard = document.createElement('div');
         formCard.className = 'card prediction-section';
         const exampleOpts = Object.entries(this.examples)
@@ -170,9 +183,82 @@ class PredictPanel {
                 this._updateAliasOptions('predict-model-select', 'predict-alias-select', grouped);
             });
             document.getElementById('predict-switch-model-btn')?.addEventListener('click', () => this.switchModel());
+
+            // Render model comparison table
+            this.renderModelComparison(grouped, current);
         } catch (err) {
             container.innerHTML = `<div class="error-message"><span>Cannot reach MLflow: ${err.message}</span></div>`;
         }
+    }
+
+    renderModelComparison(grouped, current) {
+        const container = document.getElementById('predict-model-comparison');
+        if (!container) return;
+
+        const models = [];
+        for (const [name, versions] of Object.entries(grouped)) {
+            const latest = versions[0];
+            models.push({
+                name,
+                version: latest.version,
+                aliases: latest.aliases,
+                accuracy: latest.tags.accuracy ? parseFloat(latest.tags.accuracy) : null,
+                precision: latest.tags.precision ? parseFloat(latest.tags.precision) : null,
+                recall: latest.tags.recall ? parseFloat(latest.tags.recall) : null,
+                f1: latest.tags.f1 ? parseFloat(latest.tags.f1) : null,
+                roc_auc: latest.tags.roc_auc ? parseFloat(latest.tags.roc_auc) : null,
+                isCurrent: current && current.name === name,
+            });
+        }
+
+        if (models.length === 0) {
+            container.innerHTML = `<div class="warning-message"><span>No models with metrics found</span></div>`;
+            return;
+        }
+
+        const fmt = (v) => v !== null ? (v * 100).toFixed(1) + '%' : '—';
+        const best = (metric) => {
+            const vals = models.map(m => m[metric]).filter(v => v !== null);
+            return vals.length > 0 ? Math.max(...vals) : null;
+        };
+        const isBest = (m, metric) => m[metric] !== null && m[metric] === best(metric);
+
+        const rows = models.map(m => {
+            const rowClass = m.isCurrent ? 'style="background: rgba(34, 197, 94, 0.1);"' : '';
+            const currentBadge = m.isCurrent ? '<span class="badge badge-success" style="margin-left:6px;">loaded</span>' : '';
+            const aliasBadges = m.aliases.map(a => `<span class="badge badge-primary" style="margin-left:4px;">${a}</span>`).join('');
+            return `<tr ${rowClass}>
+                <td style="font-weight:600;">${m.name}${currentBadge}${aliasBadges}</td>
+                <td>v${m.version}</td>
+                <td style="${isBest(m, 'accuracy') ? 'color:var(--success);font-weight:700;' : ''}">${fmt(m.accuracy)}</td>
+                <td style="${isBest(m, 'precision') ? 'color:var(--success);font-weight:700;' : ''}">${fmt(m.precision)}</td>
+                <td style="${isBest(m, 'recall') ? 'color:var(--success);font-weight:700;' : ''}">${fmt(m.recall)}</td>
+                <td style="${isBest(m, 'f1') ? 'color:var(--success);font-weight:700;' : ''}">${fmt(m.f1)}</td>
+                <td style="${isBest(m, 'roc_auc') ? 'color:var(--success);font-weight:700;' : ''}">${fmt(m.roc_auc)}</td>
+            </tr>`;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Version</th>
+                            <th>Accuracy</th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                            <th>F1</th>
+                            <th>ROC AUC</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+            <div style="margin-top:8px;font-size:0.8rem;color:var(--text-muted);">
+                Best metric per column highlighted in green
+            </div>
+        `;
     }
 
     _updateAliasOptions(selectId, aliasSelectId, grouped) {
