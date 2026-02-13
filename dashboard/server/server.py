@@ -192,7 +192,7 @@ def model_info():
 
 @app.route('/api/model/list')
 def list_models():
-    """List registered models from MLflow Model Registry with tags and aliases."""
+    """List registered models from MLflow Model Registry with tags, aliases, and run metrics."""
     try:
         import mlflow
         from mlflow.tracking import MlflowClient
@@ -219,11 +219,24 @@ def list_models():
             for v in sorted(versions, key=lambda x: int(x.version), reverse=True):
                 ver_aliases = alias_map.get(v.version, [])
                 ver_tags = dict(v.tags) if v.tags else {}
+
+                # Fetch metrics from the run if version tags don't have them
+                run_metrics = {}
+                if v.run_id:
+                    try:
+                        run = client.get_run(v.run_id)
+                        run_metrics = run.data.metrics or {}
+                    except Exception:
+                        pass
+
+                # Merge: version tags take priority, then run metrics
+                merged_tags = {**run_metrics, **ver_tags}
+
                 models.append({
                     'registry_name': rm.name,
                     'version': v.version,
                     'aliases': ver_aliases,
-                    'tags': ver_tags,
+                    'tags': merged_tags,
                     'model_tags': dict(rm.tags) if rm.tags else {},
                     'description': rm.description or '',
                     'run_id': v.run_id,
@@ -450,7 +463,7 @@ def get_dataset():
 
 @app.route('/api/dataset/add-row', methods=['POST'])
 def add_row():
-    """Add a new row to data/raw/diabetes.csv with created_at timestamp."""
+    """Add a new row to data/raw/diabetes.csv with validation."""
     try:
         csv_path = PROJECT_ROOT / 'data' / 'raw' / 'diabetes.csv'
         data = request.get_json()
@@ -464,10 +477,24 @@ def add_row():
         if missing:
             return jsonify({'error': True, 'message': f'Missing fields: {missing}'}), 400
 
+        # Validate boundaries (must match PatientRecordSchema in prepare_data.py)
+        constraints = {
+            'Pregnancies': (0, 20), 'Glucose': (0, 250), 'BloodPressure': (0, 200),
+            'SkinThickness': (0, 120), 'Insulin': (0, 900), 'BMI': (0, 80),
+            'DiabetesPedigreeFunction': (0, 3), 'Age': (18, 100), 'Outcome': (0, 1),
+        }
+        errors = []
+        for col, (lo, hi) in constraints.items():
+            val = data.get(col)
+            if val is None:
+                continue
+            if not (lo <= float(val) <= hi):
+                errors.append(f'{col} must be between {lo} and {hi} (got {val})')
+        if errors:
+            return jsonify({'error': True, 'message': 'Validation failed', 'details': errors}), 400
+
         df = pd.read_csv(csv_path)
         new_row = {col: data[col] for col in expected}
-        # Add created_at timestamp for drift analysis
-        new_row['created_at'] = datetime.utcnow().isoformat()
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         df.to_csv(csv_path, index=False)
 
