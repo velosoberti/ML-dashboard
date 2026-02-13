@@ -1,6 +1,6 @@
 # Diabetes Prediction ML Platform
 
-End-to-end MLOps platform for diabetes risk prediction using the Pima Indians Diabetes dataset.
+End-to-end MLOps platform for diabetes risk prediction using the Pima Indians Diabetes dataset
 
 ```
 PROJECT ARCHITECTURE
@@ -261,15 +261,3 @@ docker compose -f docker/mlflow/docker-compose.yaml down
 docker compose -f docker/airflow/docker-compose.yaml down
 zenml down
 ```
-
-## Tech Stack
-
-- Models: Decision Tree, KNN (scikit-learn)
-- Feature Store: Feast (local SQLite)
-- Experiment Tracking: MLflow 3.x (Docker)
-- Data Pipelines: Apache Airflow (Docker)
-- ML Orchestration: ZenML
-- Prediction API: Flask
-- Dashboard: Vanilla JS + Flask
-- Config Validation: Pydantic
-- Package Manager: uv
