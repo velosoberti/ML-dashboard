@@ -2,6 +2,14 @@
 
 End-to-end MLOps platform for diabetes risk prediction using the Pima Indians Diabetes dataset
 
+## 🎬 Demo
+
+[![Demo Video](https://vumbnail.com/1164831081.jpg)](https://vimeo.com/1164831081)
+
+> 📹 Click the image above to watch the full demo
+
+---
+
 ```
 PROJECT ARCHITECTURE
 
