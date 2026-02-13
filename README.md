@@ -66,10 +66,22 @@ PROJECT ARCHITECTURE
 
 ## Prerequisites
 
-- Python 3.12+
-- [uv](https://docs.astral.sh/uv/) package manager
-- Docker and Docker Compose
-- Docker network: `mlops-network`
+Before running `start.sh`, make sure you have the following installed:
+
+| Requirement | Why | Install |
+|---|---|---|
+| Git | Clone the repo | https://git-scm.com/downloads |
+| Docker + Docker Compose | Runs MLflow and Airflow containers | https://docs.docker.com/get-docker/ |
+| Python 3.13+ | Runtime for the ML code, API, and dashboard | https://www.python.org/downloads/ |
+| Bash shell | `start.sh` is a bash script | Linux/macOS: built-in. Windows: use WSL2 or Git Bash |
+| curl | Used to auto-install `uv` if missing | Linux/macOS: built-in. Windows WSL2: built-in |
+| lsof | Used by `start.sh` to free occupied ports | Linux/macOS: built-in. WSL2: `sudo apt install lsof` |
+
+`uv` (Python package manager) is installed automatically by `start.sh` if not found.
+
+Docker must be running before you execute `start.sh` — the script does not start the Docker daemon for you.
+
+On Windows, use WSL2 (recommended) or Git Bash. Native PowerShell/CMD will not work with `start.sh`.
 
 ## Quick Start
 
